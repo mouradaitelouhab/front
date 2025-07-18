@@ -1,6 +1,6 @@
 // Service du panier connecté au backend pour ALMAS & DIMAS
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = 'https://back-1-p9c0.onrender.com';
 const CART_KEY = 'almas_dimas_cart';
 
 // === Local Storage ===
