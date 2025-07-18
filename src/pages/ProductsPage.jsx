@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, Link } from 'react-router-dom';
+import axios from 'axios';
 import { 
   Diamond, 
   Filter, 
@@ -57,38 +58,34 @@ const ProductsPage = () => {
       setLoading(true);
       setError(null);
       
-      // Construire l'URL avec les paramètres de filtrage
-      const apiUrl = new URL('https://back-1-p9c0.onrender.com/api/products');
+      // Construire les paramètres de requête
+      const params = {};
       
       // Ajouter les paramètres de filtrage si ils existent
       if (filters.category) {
-        apiUrl.searchParams.append('category', filters.category);
+        params.category = filters.category;
       }
       if (filters.search) {
-        apiUrl.searchParams.append('search', filters.search);
+        params.search = filters.search;
       }
       if (filters.minPrice) {
-        apiUrl.searchParams.append('minPrice', filters.minPrice);
+        params.minPrice = filters.minPrice;
       }
       if (filters.maxPrice) {
-        apiUrl.searchParams.append('maxPrice', filters.maxPrice);
+        params.maxPrice = filters.maxPrice;
       }
       if (filters.sortBy) {
-        apiUrl.searchParams.append('sortBy', filters.sortBy);
+        params.sortBy = filters.sortBy;
       }
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
+      const response = await axios.get('https://back-1-p9c0.onrender.com/api/products', {
+        params,
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       // Adapter les données selon la structure de votre API
       // Supposons que l'API retourne soit { products: [...] } soit directement [...]
