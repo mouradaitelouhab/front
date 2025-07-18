@@ -1,7 +1,7 @@
 // Service des produits pour ALMAS & DIMAS
 // Gère les appels API vers le backend pour les produits
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL; // Use environment variable
 
 // Fonction utilitaire pour les appels API
 const apiCall = async (endpoint, options = {}) => {
@@ -30,7 +30,7 @@ const apiCall = async (endpoint, options = {}) => {
 const getAllProducts = async (filters = {}) => {
   try {
     const queryParams = new URLSearchParams();
-    
+
     if (filters.page) queryParams.append('page', filters.page);
     if (filters.limit) queryParams.append('limit', filters.limit);
     if (filters.category) queryParams.append('category', filters.category);
@@ -42,7 +42,7 @@ const getAllProducts = async (filters = {}) => {
 
     const endpoint = `/products${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await apiCall(endpoint);
-    
+
     return {
       success: true,
       products: response.data || [],
@@ -80,4 +80,3 @@ export const productService = {
   getAllProducts,
   getProductById
 };
-
