@@ -4,8 +4,7 @@
 import axios from 'axios';
 
 // Récupération dynamique de l'URL backend depuis les variables d'environnement
-const API_URL = import.meta.env.VITE_API_URL;
-
+const API_BASE_URL = 'https://back-1-p9c0.onrender.com';
 const api = axios.create({
   baseURL: API_URL,
   headers: {
