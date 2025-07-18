@@ -16,7 +16,7 @@ export default defineConfig({
     allowedHosts: ['localhost']
   },
   build: {
-    outDir: 'dist',
+    outDir: 'dist', // Vite default, ensure Render uses "dist" as publish directory
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
