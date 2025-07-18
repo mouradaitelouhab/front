@@ -1,8 +1,7 @@
 // Service des produits pour ALMAS & DIMAS
 // Gère les appels API vers le backend pour les produits
 
-const API_BASE_URL = import.meta.env.VITE_API_URL; // Use environment variable
-
+const API_BASE_URL = 'https://back-1-p9c0.onrender.com';
 // Fonction utilitaire pour les appels API
 const apiCall = async (endpoint, options = {}) => {
   try {
