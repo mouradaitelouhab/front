@@ -23,13 +23,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatPrice } from '../utils/formatPrice';
-import { productService } from '../services/productService';
 import { useCart } from '../contexts/CartContext';
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -51,28 +51,83 @@ const ProductsPage = () => {
 
   const { addToCart } = useCart();
 
-  // Charger les produits
-  useEffect(() => {
-    loadProducts();
-  }, [filters]);
-
-  const loadProducts = async () => {
+  // Fonction pour récupérer les produits depuis l'API
+  const fetchProducts = async () => {
     try {
       setLoading(true);
-      const result = await productService.getAllProducts(filters);
-      if (result.success) {
-        setProducts(result.products);
-      } else {
-        console.error('Failed to load products:', result.error);
-        setProducts([]);
+      setError(null);
+      
+      // Construire l'URL avec les paramètres de filtrage
+      const apiUrl = new URL('https://back-1-p9c0.onrender.com/api/products');
+      
+      // Ajouter les paramètres de filtrage si ils existent
+      if (filters.category) {
+        apiUrl.searchParams.append('category', filters.category);
       }
+      if (filters.search) {
+        apiUrl.searchParams.append('search', filters.search);
+      }
+      if (filters.minPrice) {
+        apiUrl.searchParams.append('minPrice', filters.minPrice);
+      }
+      if (filters.maxPrice) {
+        apiUrl.searchParams.append('maxPrice', filters.maxPrice);
+      }
+      if (filters.sortBy) {
+        apiUrl.searchParams.append('sortBy', filters.sortBy);
+      }
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Adapter les données selon la structure de votre API
+      // Supposons que l'API retourne soit { products: [...] } soit directement [...]
+      const productsData = data.products || data;
+      
+      // Traiter les données pour s'assurer qu'elles correspondent à votre structure
+      const processedProducts = productsData.map(product => ({
+        id: product.id || product._id,
+        name: product.name || product.title,
+        description: product.description || '',
+        price: product.price || 0,
+        originalPrice: product.originalPrice || product.price,
+        images: product.images || [product.image || '/placeholder-image.jpg'],
+        category: product.category || '',
+        rating: product.rating || 4.5,
+        reviewCount: product.reviewCount || 0,
+        stockQuantity: product.stockQuantity || product.stock || 1,
+        featured: product.featured || false,
+        specifications: {
+          metal: product.specifications?.metal || product.metal || '',
+          caratWeight: product.specifications?.caratWeight || product.caratWeight || '',
+          ...product.specifications
+        }
+      }));
+
+      setProducts(processedProducts);
     } catch (error) {
       console.error('Erreur lors du chargement des produits:', error);
+      setError('Impossible de charger les produits. Veuillez réessayer.');
       setProducts([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Charger les produits au montage et quand les filtres changent
+  useEffect(() => {
+    fetchProducts();
+  }, [filters]);
 
   // Gestion des filtres
   const handleFilterChange = (key, value) => {
@@ -111,7 +166,7 @@ const ProductsPage = () => {
 
   // Fonction pour appliquer les filtres
   const applyFilters = () => {
-    // Logic for applying filters would go here
+    fetchProducts();
   };
 
   return (
@@ -325,6 +380,26 @@ const ProductsPage = () => {
           )}
         </div>
 
+        {/* Message d'erreur */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <X className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-red-800">{error}</p>
+                <button
+                  onClick={fetchProducts}
+                  className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+                >
+                  Réessayer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Grille de produits */}
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -367,6 +442,9 @@ const ProductsPage = () => {
                       src={product.images[0]}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-image.jpg';
+                      }}
                     />
                     
                     {/* Overlay avec actions */}
@@ -486,7 +564,7 @@ const ProductsPage = () => {
         )}
 
         {/* Message si aucun produit */}
-        {!loading && products.length === 0 && (
+        {!loading && products.length === 0 && !error && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -546,4 +624,3 @@ const ProductsPage = () => {
 };
 
 export default ProductsPage;
-
